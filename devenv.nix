@@ -53,7 +53,6 @@ in
     if ! grep -q "android.aapt2FromMavenOverride" gradle.properties 2>/dev/null; then
       echo "android.aapt2FromMavenOverride=${devenv-profile}/libexec/android-sdk/build-tools/34.0.0/aapt2" >> gradle.properties
     fi
-    
     echo "Android Development Environment"
     echo "Java: ${config.languages.java.jdk.package.version}"
     echo "Android SDK: $ANDROID_HOME"
