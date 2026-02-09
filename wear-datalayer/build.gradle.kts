@@ -97,6 +97,7 @@ protobuf {
 dependencies {
     api(libs.io.grpc.grpc.kotlin)
     api(libs.io.grpc.protobuf.lite)
+    api(libs.io.grpc.grpc.stub)
 
     api(libs.io.grpc.grpc.android)
     api(libs.io.grpc.grpc.binder)
