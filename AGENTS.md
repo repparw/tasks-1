@@ -1,41 +1,91 @@
 # Development Environment Setup
 
-## Using devenv
+## Using Nix
 
-This project uses [devenv](https://devenv.sh) for development environment management.
+This project uses Nix for development environment management. There are multiple ways to set up the development environment:
 
-### Setup
+### 1. Existing devenv Environment
 
-Ensure devenv is installed, then enter the development shell:
+The project has an existing devenv profile that includes necessary development tools:
 
+```bash
+# Use the existing profile directly
+JAVA_HOME=".devenv/profile/lib/openjdk" PATH=".devenv/profile/bin:$PATH" ./gradlew build
+```
+
+### 2. Using nix-shell
+
+```bash
+# Quick access to Java and build tools
+nix-shell -p openjdk --run "./gradlew build"
+
+# For more complex development, include Android tools
+nix-shell -p openjdk android-studio --run "./gradlew build"
+```
+
+### 3. Creating a devenv.nix
+
+Create `devenv.nix` for a proper development environment:
+
+```nix
+{ pkgs ? import <nixpkgs> {} }:
+
+{
+  # Package definition
+  pkgs ? import <nixpkgs> {} : pkgs
+}.devenv ({
+  shell = {
+    packages = with pkgs; [
+      openjdk
+      android-sdk
+      android-studio
+      gradle
+      git
+    ];
+    
+    env = {
+      ANDROID_HOME = "${pkgs.android-sdk}/libexec/android-sdk";
+      ANDROID_SDK_ROOT = "${pkgs.android-sdk}/libexec/android-sdk";
+      JAVA_HOME = "${pkgs.openjdk}/lib/openjdk";
+    };
+    
+    enterShell = true;
+  };
+})
+```
+
+Then use:
 ```bash
 devenv shell
 ```
 
-### Available Commands
+### 4. Using the existing .devenv profile
 
-Once in the devenv shell:
+The project already has a built devenv profile in `.devenv/profile/`:
 
 ```bash
-# Build debug APK
-build-app
+# Activate the profile
+source .devenv/profile/etc/profile.d/devenv-env.sh
 
-# Run tests
-test-app
-
-# Clean build artifacts
-clean-app
-
-# Manual gradle commands (Java and Android SDK are pre-configured)
-./gradlew assembleRelease
-./gradlew testDebug
+# Or use tools directly
+.devenv/profile/bin/java -version
+.devenv/profile/bin/adb devices
 ```
 
-### Environment Details
+## Build Commands
 
-- **Java**: JDK 21 (configured automatically)
-- **Android SDK**: Build tools 34.0.0/35.0.0, platforms 34/35/36
-- **Environment Variables**: `JAVA_HOME`, `ANDROID_HOME`, `ANDROID_SDK_ROOT` are set automatically
+Once environment is set up:
+
+```bash
+# Test
+./gradlew test
+
+# Build debug APK
+./gradlew assembleDebug
+
+# Install to connected device
+adb install app/build/outputs/apk/generic/debug/app-generic-debug.apk
+```
 
 ## Troubleshooting
 
@@ -43,16 +93,36 @@ clean-app
 
 If you encounter Android SDK license issues:
 
+1. Accept licenses manually:
 ```bash
-yes | sdkmanager --licenses
+ANDROID_HOME="/path/to/sdk" yes | sdkmanager --licenses
 ```
 
-### devenv not found
+2. Or bypass with local.properties:
+```properties
+sdk.dir=/path/to/android-sdk
+```
 
-Install devenv: https://devenv.sh/getting-started/
+### Java Issues
 
-Or use the existing profile directly:
+If JAVA_HOME is not set:
+```bash
+# Find Java in devenv profile
+JAVA_HOME=".devenv/profile/lib/openjdk"
 
+# Or use nix-shell
+nix-shell -p openjdk --run "java -version"
+```
+
+## Recommended Workflow
+
+For day-to-day development:
+
+1. Use the existing devenv profile (quickest):
 ```bash
 JAVA_HOME=".devenv/profile/lib/openjdk" PATH=".devenv/profile/bin:$PATH" ./gradlew build
 ```
+
+2. Or create a proper devenv.nix for reproducible environment
+
+3. Ensure your local.properties points to the correct Android SDK path if needed
