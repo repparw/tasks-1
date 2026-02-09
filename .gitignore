@@ -14,4 +14,7 @@ Thumbs.db
 .DS_Store
 .devenv*
 result
-
+tmp-android-sdk/
+.devenv/
+.devenv.lock
+.android/
